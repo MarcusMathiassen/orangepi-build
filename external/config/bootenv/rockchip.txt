@@ -1,4 +1,4 @@
 verbosity=1
 bootlogo=false
-extraargs=cma=1G hugepages=128 default_hugepagesz=2M isolcpus=4-7 nohz_full=4-7 rcu_nocbs=4-7
+extraargs=cma=1G hugepages=128 default_hugepagesz=2M isolcpus=4-7 nohz_full=4-7 rcu_nocbs=4-7 pcie_aspm=off
 overlays=hdmirx
