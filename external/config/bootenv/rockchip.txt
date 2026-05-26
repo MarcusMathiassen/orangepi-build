@@ -1,4 +1,5 @@
 verbosity=1
 bootlogo=false
+overlay_prefix=rk3588
 extraargs=cma=256M hugepagesz=1G hugepages=1 isolcpus=4-7 nohz_full=4-7 rcu_nocbs=4-7 rcu_nocb_poll=1 pcie_aspm=off cpufreq.default_governor=performance
 overlays=hdmirx
