@@ -100,6 +100,17 @@ check_loop_device()
 {
 
 	local device=$1
+	# [mota] Wait for the node instead of checking once. After `losetup -P`
+	# the host's udev can trigger a second partition scan, which deletes and
+	# re-creates loopNpM; a single check that lands in that gap fails the build
+	# with "Device node /dev/loop0p1 does not exist" (kernel log shows
+	# "loop0: p1" twice). Give it up to 10 s to settle.
+	local i
+	for i in $(seq 100); do
+		[[ -b $device ]] && break
+		[[ $CONTAINER_COMPAT == yes && -b /tmp/$device ]] && break
+		sleep 0.1
+	done
 	if [[ ! -b $device ]]; then
 		if [[ $CONTAINER_COMPAT == yes && -b /tmp/$device ]]; then
 			display_alert "Creating device node" "$device"
