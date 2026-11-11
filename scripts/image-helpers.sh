@@ -111,11 +111,26 @@ check_loop_device()
 		[[ $CONTAINER_COMPAT == yes && -b /tmp/$device ]] && break
 		sleep 0.1
 	done
+	# [mota] The kernel can have the partition while this mount namespace's
+	# /dev never shows the node (seen in the build container: kernel log has
+	# "loop0: p1", /dev/loop0p1 and /tmp/dev/loop0p1 both missing). sysfs is
+	# authoritative for major:minor, so make the node from it.
+	local sysdev="/sys/class/block/${device##*/}/dev"
 	if [[ ! -b $device ]]; then
 		if [[ $CONTAINER_COMPAT == yes && -b /tmp/$device ]]; then
 			display_alert "Creating device node" "$device"
 			mknod -m0660 "${device}" b "0x$(stat -c '%t' "/tmp/$device")" "0x$(stat -c '%T' "/tmp/$device")"
+		elif [[ -r $sysdev ]]; then
+			display_alert "Creating device node from sysfs" "$device $(<"$sysdev")"
+			mknod -m0660 "${device}" b "$(cut -d: -f1 "$sysdev")" "$(cut -d: -f2 "$sysdev")"
 		else
+			{
+				echo "check_loop_device: $device missing"
+				ls -la "${device%p*}"* "/tmp${device%p*}"* 2>&1
+				ls /sys/class/block 2>&1 | tr '\n' ' '; echo
+				losetup -l 2>&1
+				findmnt -n /dev /tmp/dev 2>&1
+			} >> "${DEST}"/${LOG_SUBPATH}/output.log
 			exit_with_error "Device node $device does not exist"
 		fi
 	fi
